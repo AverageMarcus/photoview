@@ -28,7 +28,6 @@ require (
 	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2
 	golang.org/x/image v0.0.0-20210220032944-ac19c3e999fb
 	golang.org/x/text v0.3.6 // indirect
-	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	gopkg.in/vansante/go-ffprobe.v2 v2.0.2
 	gorm.io/driver/mysql v1.0.5
 	gorm.io/driver/postgres v1.0.8

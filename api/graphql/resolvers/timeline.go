@@ -8,6 +8,7 @@ import (
 	"github.com/photoview/photoview/api/database"
 	"github.com/photoview/photoview/api/graphql/auth"
 	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
 
@@ -18,6 +19,8 @@ func (r *queryResolver) MyTimeline(ctx context.Context, paginate *models.Paginat
 	}
 
 	var timelineGroups []*models.TimelineGroup
+
+	siteInfo, _ := r.SiteInfo(ctx)
 
 	transactionError := r.Database.Transaction(func(tx *gorm.DB) error {
 		// album_id, year, month, day
@@ -102,7 +105,7 @@ func (r *queryResolver) MyTimeline(ctx context.Context, paginate *models.Paginat
 				mediaQuery.Where("media.id IN (?)", tx.Table("user_media_data").Select("user_media_data.media_id").Where("user_media_data.user_id = ?", user.ID).Where("user_media_data.favorite = 1"))
 			}
 
-			if err := mediaQuery.Limit(5).Find(&groupMedia).Error; err != nil {
+			if err := mediaQuery.Limit(siteInfo.ImagesPerDate).Find(&groupMedia).Error; err != nil {
 				return err
 			}
 
@@ -133,4 +136,21 @@ func (r *queryResolver) MyTimeline(ctx context.Context, paginate *models.Paginat
 	}
 
 	return timelineGroups, nil
+}
+
+func (r *mutationResolver) SetImagesPerDate(ctx context.Context, imagesPerDate int) (int, error) {
+	if imagesPerDate < 1 {
+		return 0, errors.New("concurrent workers must at least be 1")
+	}
+
+	if err := r.Database.Session(&gorm.Session{AllowGlobalUpdate: true}).Model(&models.SiteInfo{}).Update("images_per_date", imagesPerDate).Error; err != nil {
+		return 0, err
+	}
+
+	var siteInfo models.SiteInfo
+	if err := r.Database.First(&siteInfo).Error; err != nil {
+		return 0, err
+	}
+
+	return siteInfo.ImagesPerDate, nil
 }

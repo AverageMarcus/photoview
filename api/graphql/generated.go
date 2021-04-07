@@ -153,6 +153,7 @@ type ComplexityRoot struct {
 		ScanAll                     func(childComplexity int) int
 		ScanUser                    func(childComplexity int, userID int) int
 		SetFaceGroupLabel           func(childComplexity int, faceGroupID int, label *string) int
+		SetImagesPerDate            func(childComplexity int, imagesPerDate int) int
 		SetPeriodicScanInterval     func(childComplexity int, interval int) int
 		SetScannerConcurrentWorkers func(childComplexity int, workers int) int
 		ShareAlbum                  func(childComplexity int, albumID int, expire *time.Time, password *string) int
@@ -217,6 +218,7 @@ type ComplexityRoot struct {
 
 	SiteInfo struct {
 		ConcurrentWorkers    func(childComplexity int) int
+		ImagesPerDate        func(childComplexity int) int
 		InitialSetup         func(childComplexity int) int
 		PeriodicScanInterval func(childComplexity int) int
 	}
@@ -301,6 +303,7 @@ type MutationResolver interface {
 	UserRemoveRootAlbum(ctx context.Context, userID int, albumID int) (*models.Album, error)
 	SetPeriodicScanInterval(ctx context.Context, interval int) (int, error)
 	SetScannerConcurrentWorkers(ctx context.Context, workers int) (int, error)
+	SetImagesPerDate(ctx context.Context, imagesPerDate int) (int, error)
 	SetFaceGroupLabel(ctx context.Context, faceGroupID int, label *string) (*models.FaceGroup, error)
 	CombineFaceGroups(ctx context.Context, destinationFaceGroupID int, sourceFaceGroupID int) (*models.FaceGroup, error)
 	MoveImageFaces(ctx context.Context, imageFaceIDs []int, destinationFaceGroupID int) (*models.FaceGroup, error)
@@ -923,6 +926,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.SetFaceGroupLabel(childComplexity, args["faceGroupID"].(int), args["label"].(*string)), true
 
+	case "Mutation.setImagesPerDate":
+		if e.complexity.Mutation.SetImagesPerDate == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_setImagesPerDate_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.SetImagesPerDate(childComplexity, args["imagesPerDate"].(int)), true
+
 	case "Mutation.setPeriodicScanInterval":
 		if e.complexity.Mutation.SetPeriodicScanInterval == nil {
 			break
@@ -1340,6 +1355,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.SiteInfo.ConcurrentWorkers(childComplexity), true
 
+	case "SiteInfo.imagesPerDate":
+		if e.complexity.SiteInfo.ImagesPerDate == nil {
+			break
+		}
+
+		return e.complexity.SiteInfo.ImagesPerDate(childComplexity), true
+
 	case "SiteInfo.initialSetup":
 		if e.complexity.SiteInfo.InitialSetup == nil {
 			break
@@ -1706,6 +1728,9 @@ type Mutation {
   "Set max number of concurrent scanner jobs running at once"
   setScannerConcurrentWorkers(workers: Int!): Int!
 
+  "Set the max number of images to show per date"
+  setImagesPerDate(imagesPerDate: Int!): Int!
+
   "Assign a label to a face group, set label to null to remove the current one"
   setFaceGroupLabel(faceGroupID: ID!, label: String): FaceGroup!
   "Merge two face groups into a single one, all ImageFaces from source will be moved to destination"
@@ -1778,6 +1803,8 @@ type SiteInfo {
   periodicScanInterval: Int! @isAdmin
   "How many max concurrent scanner jobs that should run at once"
   concurrentWorkers: Int! @isAdmin
+  "Max number of images to show per fate on timeline"
+  imagesPerDate: Int!
 }
 
 type User {
@@ -2287,6 +2314,21 @@ func (ec *executionContext) field_Mutation_setFaceGroupLabel_args(ctx context.Co
 		}
 	}
 	args["label"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_setImagesPerDate_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["imagesPerDate"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("imagesPerDate"))
+		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["imagesPerDate"] = arg0
 	return args, nil
 }
 
@@ -5513,6 +5555,48 @@ func (ec *executionContext) _Mutation_setScannerConcurrentWorkers(ctx context.Co
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Mutation_setImagesPerDate(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_setImagesPerDate_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().SetImagesPerDate(rctx, args["imagesPerDate"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Mutation_setFaceGroupLabel(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -7326,6 +7410,41 @@ func (ec *executionContext) _SiteInfo_concurrentWorkers(ctx context.Context, fie
 			return data, nil
 		}
 		return nil, fmt.Errorf(`unexpected type %T from directive, should be int`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _SiteInfo_imagesPerDate(ctx context.Context, field graphql.CollectedField, obj *models.SiteInfo) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "SiteInfo",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ImagesPerDate, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -9891,6 +10010,11 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "setImagesPerDate":
+			out.Values[i] = ec._Mutation_setImagesPerDate(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "setFaceGroupLabel":
 			out.Values[i] = ec._Mutation_setFaceGroupLabel(ctx, field)
 			if out.Values[i] == graphql.Null {
@@ -10387,6 +10511,11 @@ func (ec *executionContext) _SiteInfo(ctx context.Context, sel ast.SelectionSet,
 			}
 		case "concurrentWorkers":
 			out.Values[i] = ec._SiteInfo_concurrentWorkers(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "imagesPerDate":
+			out.Values[i] = ec._SiteInfo_imagesPerDate(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}

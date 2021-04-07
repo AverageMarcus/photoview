@@ -4,6 +4,7 @@ import styled from 'styled-components'
 import Layout from '../../Layout'
 
 import ScannerSection from './ScannerSection'
+import TimelineSection from './TimelineSection'
 import UsersTable from './Users/UsersTable'
 
 export const SectionTitle = styled.h2`
@@ -26,6 +27,7 @@ export const InputLabelDescription = styled.p`
 const SettingsPage = () => {
   return (
     <Layout title="Settings">
+      <TimelineSection />
       <ScannerSection />
       <UsersTable />
     </Layout>

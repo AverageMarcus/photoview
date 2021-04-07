@@ -129,6 +129,9 @@ type Mutation {
   "Set max number of concurrent scanner jobs running at once"
   setScannerConcurrentWorkers(workers: Int!): Int!
 
+  "Set the max number of images to show per date"
+  setImagesPerDate(imagesPerDate: Int!): Int!
+
   "Assign a label to a face group, set label to null to remove the current one"
   setFaceGroupLabel(faceGroupID: ID!, label: String): FaceGroup!
   "Merge two face groups into a single one, all ImageFaces from source will be moved to destination"
@@ -201,6 +204,8 @@ type SiteInfo {
   periodicScanInterval: Int! @isAdmin
   "How many max concurrent scanner jobs that should run at once"
   concurrentWorkers: Int! @isAdmin
+  "Max number of images to show per date on timeline"
+  imagesPerDate: Int!
 }
 
 type User {

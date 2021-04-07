@@ -10,6 +10,7 @@ type SiteInfo struct {
 	InitialSetup         bool `gorm:"not null"`
 	PeriodicScanInterval int  `gorm:"not null"`
 	ConcurrentWorkers    int  `gorm:"not null"`
+	ImagesPerDate        int  `gorm:"not null"`
 }
 
 func (SiteInfo) TableName() string {
@@ -33,6 +34,7 @@ func GetSiteInfo(db *gorm.DB) (*SiteInfo, error) {
 				InitialSetup:         true,
 				PeriodicScanInterval: 0,
 				ConcurrentWorkers:    defaultConcurrentWorkers,
+				ImagesPerDate:        5,
 			}
 
 			if err := db.Create(&siteInfo).Error; err != nil {

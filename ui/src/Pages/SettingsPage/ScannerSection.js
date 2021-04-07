@@ -19,7 +19,7 @@ const ScannerSection = () => {
 
   return (
     <div>
-      <SectionTitle nospace>Scanner</SectionTitle>
+      <SectionTitle>Scanner</SectionTitle>
       <InputLabelDescription>
         Will scan all users for new or updated media
       </InputLabelDescription>
